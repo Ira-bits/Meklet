@@ -133,3 +133,7 @@ dmypy.json
 
 # documentation
 docs
+
+# Project specifics
+corpus
+index_files
