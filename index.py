@@ -16,7 +16,7 @@ def open_file(curr_file_no):
     """
     Opens a new pickle file
 
-       * accepts an integer - current file number  as operand
+       * accepts an integer - current file number as operand
        * returns the file object for newly opened file
 
     """
@@ -41,6 +41,7 @@ def parse_docs():
         id_dict = pickle.load(f)
         curr_file_no = 1
         index_obj = open_file(curr_file_no)
+        curr_list = []
 
         # TODO: Normalization of documents
 
@@ -48,11 +49,19 @@ def parse_docs():
             with open("./corpus/" + name, "r") as document:
                 for line in document:
                     for word in line.split():
-                        pickle.dump((word, id), index_obj, pickle.HIGHEST_PROTOCOL)
-                        if os.path.getsize(index_obj.name) >= INDEX_SIZE:
+                        curr_list.append((word.lower(), id))
+                        if len(curr_list) >= INDEX_SIZE:
+                            curr_list = sort_list(curr_list)
+                            write_to_file(index_obj, curr_list)
+                            curr_list = []
                             index_obj.close()
                             curr_file_no += 1
                             index_obj = open_file(curr_file_no)
+
+
+def write_to_file(index_obj, curr_list):
+    for entry in curr_list:
+        pickle.dump(entry, index_obj, pickle.HIGHEST_PROTOCOL)
 
 
 def assign_Id():
@@ -65,11 +74,15 @@ def assign_Id():
         pickle.dump(id_dict, f, pickle.HIGHEST_PROTOCOL)
 
 
+def sort_list(unsorted_list):
+    return sorted(unsorted_list, key=lambda x: (x[0], x[1]))
+
+
 # temporary function to print pickle files. To be removed later.
 def display():
     file_list = os.listdir("index_files")
     for filename in file_list:
-        with (open("./index_files/" + filename, "rb")) as openfile:
+        with open("./index_files/" + filename, "rb") as openfile:
             while True:
                 try:
                     print(pickle.load(openfile))
