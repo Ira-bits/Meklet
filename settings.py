@@ -1,3 +1,5 @@
 """ Constants for Index Construction and Match Scoring """
 
-INDEX_SIZE = 200  # 1KB in development. Change to 500 MB in production.
+# Block size= 200 records ~ 1 KB in development.
+# To be changed to a suitable value for production.
+BLOCK_SIZE = 200

@@ -9,11 +9,16 @@
 
 import pickle
 import os
-import copy
-from settings import INDEX_SIZE
+from settings import BLOCK_SIZE
 
 
-# Helper functions for the Block Sort Based Indexing Algorithm
+# Helper functions for the Block Sort Based Indexing Algorithm -
+# open_file() --> opens new index files as and when required.
+# sort_list() --> sorts a given list of tuples first by term then by docID.
+# write_to_file --> dumps index to disk.
+# find_smallest --> returns the smallest tuple and updates object_list accordingly.
+
+
 def open_file(curr_file_no=None, filename=None):
     if curr_file_no:
         filename = "./index_files/temp_index" + str(curr_file_no) + ".pkl"
@@ -30,17 +35,9 @@ def write_to_file(index_obj, curr_list):
         pickle.dump(entry, index_obj, pickle.HIGHEST_PROTOCOL)
 
 
-def read_object(ptrs, ptr):
-    try:
-        return pickle.load(ptr)
-    except EOFError:
-        ptrs.remove(ptr)
-        return None
-
-
 def find_smallest(obj_list):
     smallest = ()
-    small_ptr = None
+    small_ptr = None  # stores the file pointer containing the smallest tuple.
     for obj, ptr in obj_list:
         if not smallest or obj[0] < smallest[0]:
             smallest = obj
@@ -50,10 +47,12 @@ def find_smallest(obj_list):
             small_ptr = ptr
     obj_list.remove((smallest, small_ptr))
     try:
-        new_obj = pickle.load(small_ptr)
+        new_obj = pickle.load(
+            small_ptr
+        )  # Increase the file pointer to point to next tuple
         obj_list.append((new_obj, small_ptr))
     except EOFError:
-        small_ptr.close()
+        small_ptr.close()  # Close the file if no more tuples are available.
     return (smallest, obj_list)
 
 
@@ -91,8 +90,10 @@ def parse_docs():
                 for line in document:
                     for word in line.split():
                         curr_list.append((word.lower(), id))
-                        if len(curr_list) >= INDEX_SIZE:
-                            curr_list = sort_list(curr_list)
+                        if len(curr_list) >= BLOCK_SIZE:
+                            curr_list = sort_list(
+                                curr_list
+                            )  # sort the list before writing to disk.
                             index_obj = open_file(curr_file_no=curr_file_no)
                             write_to_file(index_obj, curr_list)
                             curr_list = []
@@ -106,22 +107,25 @@ def parse_docs():
 
 
 def merge_indices():
+    """ Merges the intermidiate indices using k-way merge to get an unified inverted index. """
+
     file_list = os.listdir("index_files")
     index_obj = open_file(filename="./index_files/index.pkl")
-    ptrs = []
-    curr_list = []
-    obj_list = []
+    ptrs = []  # List of file pointers for all intermidiate indices.
+    curr_list = []  # Stores list to tuples to be written to the unified index.
+    obj_list = []  # List of (tuple,ptr) pair for every file.
     for filename in file_list:
         if filename != "docId.pkl" and filename != "index.pkl":
             ptrs.append(open("./index_files/" + filename, "rb"))
     for ptr in ptrs:
-        print(ptr.name)
         obj = pickle.load(ptr)
         obj_list.append((obj, ptr))
+
+    # Until all intermidiate indices are parsed , find smallest and write to final index.
     while obj_list:
         req_obj, obj_list = find_smallest(obj_list)
         curr_list.append(req_obj)
-        if len(curr_list) > INDEX_SIZE:
+        if len(curr_list) > BLOCK_SIZE:
             write_to_file(index_obj, curr_list)
             curr_list = []
     if curr_list:
