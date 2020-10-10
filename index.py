@@ -161,13 +161,15 @@ def construct_index():
                         freq = 1
                 else:  # new term.
                     if prev_term != "":
-                        index_obj[prev_term] = term_list.append((prev_docId, freq))
+                        term_list.append((prev_docId, freq))
+                        index_obj[prev_term] = term_list
                     prev_term = term
                     prev_docId = docId
                     freq = 1
                     term_list = []
             except EOFError:
-                index_obj[prev_term] = term_list.append((prev_docId, freq))
+                term_list.append((prev_docId, freq))
+                index_obj[prev_term] = term_list
                 index_obj.close()
                 break
 
