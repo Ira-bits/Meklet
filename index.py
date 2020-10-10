@@ -4,10 +4,12 @@
     * Assigns a docID to each document in the corpus.
     * Parses The documents to create intermidiate inverted indices.
     * Uses Block Sort and Merge Algorithm to generate an unified inverted index.
+    * Finally, creates a shelf containing term as key and list of (docId,freq) as value.
 
 """
 
 import pickle
+import shelve
 import os
 from settings import BLOCK_SIZE
 
@@ -15,8 +17,8 @@ from settings import BLOCK_SIZE
 # Helper functions for the Block Sort Based Indexing Algorithm -
 # open_file() --> opens new index files as and when required.
 # sort_list() --> sorts a given list of tuples first by term then by docID.
-# write_to_file --> dumps index to disk.
-# find_smallest --> returns the smallest tuple and updates object_list accordingly.
+# write_to_file() --> dumps index to disk.
+# find_smallest() --> returns the smallest tuple and updates object_list accordingly.
 
 
 def open_file(curr_file_no=None, filename=None):
@@ -57,7 +59,7 @@ def find_smallest(obj_list):
 
 
 def assign_Id():
-    """Assigns an id numbber to each document in the corpus"""
+    """Assigns an id number to each document in the corpus"""
     id_dict = {}
     curr_id = 1
     for filename in os.listdir("corpus"):
@@ -110,7 +112,7 @@ def merge_indices():
     """ Merges the intermidiate indices using k-way merge to get an unified inverted index. """
 
     file_list = os.listdir("index_files")
-    index_obj = open_file(filename="./index_files/index.pkl")
+    temp_index_obj = open_file(filename="./index_files/temp_index.pkl")
     ptrs = []  # List of file pointers for all intermidiate indices.
     curr_list = []  # Stores list to tuples to be written to the unified index.
     obj_list = []  # List of (tuple,ptr) pair for every file.
@@ -126,16 +128,53 @@ def merge_indices():
         req_obj, obj_list = find_smallest(obj_list)
         curr_list.append(req_obj)
         if len(curr_list) > BLOCK_SIZE:
-            write_to_file(index_obj, curr_list)
+            write_to_file(temp_index_obj, curr_list)
             curr_list = []
     if curr_list:
-        write_to_file(index_obj, curr_list)
-    index_obj.close()
+        write_to_file(temp_index_obj, curr_list)
+    temp_index_obj.close()
+
+
+def construct_index():
+    """
+    Constructs the final index in the form of a shelf
+    where the key is each term in the corpus and the value is
+    a list of tuples containtng the docId and the respective term frequency.
+    """
+
+    index_obj = shelve.open("./index_files/index.db")
+    with open("./index_files/temp_index.pkl", "rb") as temp_index:
+        term_list = []  # List of (docId,freq) pairs for the current term.
+        prev_term = ""
+        prev_docId = -1
+        freq = 0  # Frequency value for a term in a particular document.
+        while True:
+            try:
+                term, docId = pickle.load(temp_index)
+                if term == prev_term:
+                    if docId == prev_docId:
+                        freq += 1
+                    else:  # new docId for same term.
+                        if prev_docId != -1:
+                            term_list.append((prev_docId, freq))
+                        prev_docId = docId
+                        freq = 1
+                else:  # new term.
+                    if prev_term != "":
+                        index_obj[prev_term] = term_list.append((prev_docId, freq))
+                    prev_term = term
+                    prev_docId = docId
+                    freq = 1
+                    term_list = []
+            except EOFError:
+                index_obj[prev_term] = term_list.append((prev_docId, freq))
+                index_obj.close()
+                break
 
 
 # Temporary function to print pickle files. To be removed later.
 def display():
-    with open("./index_files/index.pkl", "rb") as openfile:
+    with open("./index_files/temp_index.pkl", "rb") as openfile:
         while True:
             try:
                 print(pickle.load(openfile))
@@ -147,4 +186,4 @@ if __name__ == "__main__":
     assign_Id()
     parse_docs()
     merge_indices()
-    display()
+    construct_index()
