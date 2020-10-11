@@ -9,6 +9,7 @@ verify_ssl = true
 pylint = "*"
 black = "*"
 sphinx = "*"
+nltk = "*"
 
 [requires]
 python_version = "3.8"
