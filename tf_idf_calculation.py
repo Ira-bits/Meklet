@@ -17,9 +17,7 @@ def calculate_term_tf_idf(term):
     tf_idf_weights = []
     for document_data in term_frequencies:
         docId, freq = document_data
-        log_frequency_weight = 0
-        if freq > 0:
-            log_frequency_weight = 1 + log10(freq)
+        log_frequency_weight = 1 + log10(freq)
         document_tf_idf = log_frequency_weight * idf
         tf_idf_weights.append((docId, document_tf_idf))
     return tf_idf_weights
