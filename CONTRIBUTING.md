@@ -10,7 +10,7 @@ We love contributions and would be glad to help you make good patches. That out 
 6. Commit your changes (See [Guidelines](#commit-message-guidelines)).
 7. Rebase your commits with `upstream/main`:
   - `git checkout main`
-  - `git fetch upstream master`
+  - `git fetch upstream main`
   - `git reset --hard FETCH_HEAD`
   - `git checkout my-feature`
   - `git rebase main`

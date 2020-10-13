@@ -12,9 +12,9 @@ def calculate_term_tf_idf(term):
     total_number_of_docs = len(os.listdir("corpus"))
     document_frequency = len(term_frequencies.keys())
 
-    # use (total_number_of_docs + 1) as numerator to handle cases when document_frequency = total_number_of_docs
+    # use (total_number_of_docs + 2) as numerator to handle cases when document_frequency = total_number_of_docs
     # use (1 + document_frequency) as denominator to handle cases when document_frequency comes out to be zero
-    idf = log10(total_number_of_docs + 1 / 1 + document_frequency)
+    idf = log10((total_number_of_docs + 2) / (1 + document_frequency))
     tf_idf_weights = []
     for document_data in term_frequencies.items():
         docId, freq = document_data
