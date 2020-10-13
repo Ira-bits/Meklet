@@ -2,7 +2,7 @@
 *Index Generator*
 
     * Assigns a docID to each document in the corpus.
-    * Parses The documents to create intermidiate inverted indices.
+    * Parses The documents to create intermediate inverted indices.
     * Uses Block Sort and Merge Algorithm to generate an unified inverted index.
     * Finally, creates a shelf containing term as key and list of (docId,freq) as value.
 
@@ -11,6 +11,8 @@
 import pickle
 import shelve
 import os
+import pathlib
+from query_processing import process_string, download_nltk_deps
 from settings import BLOCK_SIZE
 
 
@@ -58,7 +60,7 @@ def find_smallest(obj_list):
     return (smallest, obj_list)
 
 
-def assign_Id():
+def assign_docId():
     """Assigns an id number to each document in the corpus"""
     id_dict = {}
     curr_id = 1
@@ -72,35 +74,37 @@ def assign_Id():
 def parse_docs():
     """
     After normalization of documents, parses them to construct
-    intermidiate inverted indices.
+    intermediate inverted indices.
 
-        * temp_index<no>.pkl store the intermidiate indices
+        * temp_index<no>.pkl store the intermediate indices
 
     """
 
-    # Load the id dictionary
+    # Load the id dictionary.
     id_dict = {}
     with open("./index_files/docId.pkl", "rb") as f:
         id_dict = pickle.load(f)
         curr_file_no = 1
-        curr_list = []
+        curr_list = []  # Stores (termId,docId) pairs for current intermediate index.
 
-        # TODO: Normalization of documents
+        for docId, name in id_dict.items():
+            # Get document text as String.
+            doc_text = pathlib.Path("./corpus/" + name).read_text().replace("\n", " ")
 
-        for id, name in id_dict.items():
-            with open("./corpus/" + name, "r") as document:
-                for line in document:
-                    for word in line.split():
-                        curr_list.append((word.lower(), id))
-                        if len(curr_list) >= BLOCK_SIZE:
-                            curr_list = sort_list(
-                                curr_list
-                            )  # sort the list before writing to disk.
-                            index_obj = open_file(curr_file_no=curr_file_no)
-                            write_to_file(index_obj, curr_list)
-                            curr_list = []
-                            index_obj.close()
-                            curr_file_no += 1
+            # Get list of terms in document after normalization.
+            doc_terms = process_string(doc_text)
+
+            for term in doc_terms:
+                curr_list.append((term, docId))
+                if len(curr_list) >= BLOCK_SIZE:
+                    curr_list = sort_list(
+                        curr_list
+                    )  # sort the list before writing to disk.
+                    index_obj = open_file(curr_file_no=curr_file_no)
+                    write_to_file(index_obj, curr_list)
+                    curr_list = []
+                    index_obj.close()
+                    curr_file_no += 1
         if curr_list:
             curr_list = sort_list(curr_list)
             index_obj = open_file(curr_file_no=curr_file_no)
@@ -109,21 +113,21 @@ def parse_docs():
 
 
 def merge_indices():
-    """ Merges the intermidiate indices using k-way merge to get an unified inverted index. """
+    """ Merges the intermediate indices using k-way merge to get an unified inverted index. """
 
     file_list = os.listdir("index_files")
     temp_index_obj = open_file(filename="./index_files/temp_index.pkl")
-    ptrs = []  # List of file pointers for all intermidiate indices.
+    ptrs = []  # List of file pointers for all intermediate indices.
     curr_list = []  # Stores list to tuples to be written to the unified index.
     obj_list = []  # List of (tuple,ptr) pair for every file.
     for filename in file_list:
-        if filename != "docId.pkl" and filename != "index.pkl":
+        if filename not in ["docId.pkl", "termId.pkl", "temp_index.pkl", "index.db"]:
             ptrs.append(open("./index_files/" + filename, "rb"))
     for ptr in ptrs:
         obj = pickle.load(ptr)
         obj_list.append((obj, ptr))
 
-    # Until all intermidiate indices are parsed , find smallest and write to final index.
+    # Until all intermediate indices are parsed , find smallest and write to unified index.
     while obj_list:
         req_obj, obj_list = find_smallest(obj_list)
         curr_list.append(req_obj)
@@ -139,12 +143,12 @@ def construct_index():
     """
     Constructs the final index in the form of a shelf
     where the key is each term in the corpus and the value is
-    a list of tuples containtng the docId and the respective term frequency.
+    a dictionary containing docId,freq as the key-value pairs.
     """
 
     index_obj = shelve.open("./index_files/index.db")
     with open("./index_files/temp_index.pkl", "rb") as temp_index:
-        term_list = []  # List of (docId,freq) pairs for the current term.
+        term_dict = {}  # Dict of docId,freq as key-value pairs for the current term.
         prev_term = ""
         prev_docId = -1
         freq = 0  # Frequency value for a term in a particular document.
@@ -156,36 +160,46 @@ def construct_index():
                         freq += 1
                     else:  # new docId for same term.
                         if prev_docId != -1:
-                            term_list.append((prev_docId, freq))
+                            term_dict[prev_docId] = freq
                         prev_docId = docId
                         freq = 1
                 else:  # new term.
                     if prev_term != "":
-                        term_list.append((prev_docId, freq))
-                        index_obj[prev_term] = term_list
+                        term_dict[prev_docId] = freq
+                        index_obj[prev_term] = term_dict
                     prev_term = term
                     prev_docId = docId
                     freq = 1
-                    term_list = []
+                    term_dict = {}
             except EOFError:
-                term_list.append((prev_docId, freq))
-                index_obj[prev_term] = term_list
+                term_dict[prev_docId] = freq
+                index_obj[prev_term] = term_dict
                 index_obj.close()
                 break
 
 
 # Temporary function to print pickle files. To be removed later.
-def display():
-    with open("./index_files/temp_index.pkl", "rb") as openfile:
-        while True:
-            try:
-                print(pickle.load(openfile))
-            except EOFError:
-                break
+def display(final_index=True):
+    if final_index:
+        ptr = shelve.open("./index_files/index.db")
+        for key in ptr.keys():
+            print(key, ptr[key], sep=" ")
+        ptr.close()
+        return
+    else:
+        with open("./index_files/temp_index.pkl", "rb") as openfile:
+            while True:
+                try:
+                    print(pickle.load(openfile))
+                except EOFError:
+                    break
 
 
 if __name__ == "__main__":
-    assign_Id()
+    download_nltk_deps()  # To be removed form here.
+    assign_docId()
     parse_docs()
     merge_indices()
     construct_index()
+    # Uncomment during development.
+    # display()
