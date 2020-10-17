@@ -8,7 +8,20 @@ body {
     box-sizing: border-box;
 }
 
+a {
+    text-decoration: none;
+}
+
 .logo-search-container {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    margin: 10px;
+    gap: 10px;
+}
+
+.logo-search-container.init {
     position: absolute;
     left: 50%;
     top: 50%;
@@ -22,12 +35,17 @@ body {
 
 .logo {
     text-align: center;
-    font-size: 72px;
+    font-size: 35px;
     color: #41337a;
 }
-
+.logo.init {
+    /* text-align: center; */
+    font-size: 72px;
+    /* color: #41337a; */
+}
 .search-container {
     display: flex;
+    width: 100%;
     border: 1px solid black;
 }
 
@@ -62,17 +80,26 @@ body {
 }
 
 @media only screen and (min-width: 540px) {
-    /* For desktop: */
     .logo-search-container {
-        width: 70%;
-        margin-left: -35%;
+        width: 80%;
+        flex-direction: row;
+    }
+
+    .logo-search-container.init {
+        width: 80%;
+        margin-left: -40%;
+        flex-direction: column;
     }
 }
 
-@media only screen and (min-width: 1080px) {
-    /* For desktop: */
+@media only screen and (min-width: 1280px) {
     .logo-search-container {
-        width: 720px;
-        margin-left: -360px;
+        width: 1080px;
+    }
+
+    .logo-search-container.init {
+        width: 1080px;
+        flex-direction: column;
+        margin-left: -540px;
     }
 }
