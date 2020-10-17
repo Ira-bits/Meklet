@@ -44,6 +44,3 @@ def calculate_query_tf_idf(query):
         tf_idf_weights.append((docId, tf_idf))
 
     return tf_idf_weights
-
-
-print(calculate_query_tf_idf(["and"]))
