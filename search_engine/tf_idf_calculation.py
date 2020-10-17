@@ -1,4 +1,4 @@
-from index_lookup import lookup_term
+from .index_lookup import lookup_term
 import os
 from math import log10
 
