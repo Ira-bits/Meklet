@@ -55,9 +55,14 @@ if __name__ == "__main__":
     recreate = False if input().lower() == "n" else True
 
     if recreate:
-        print("Constructing Index ...")
-        search_engine.start_indexing()
-        print("Index Successfully Created!")
+        try:
+            print("Constructing Index ...")
+            search_engine.start_indexing()
+            print("Index Successfully Created!")
+        except Exception as e:
+            print(e)
+            print("Aborting! Please Try Again.")
+            exit()
 
     # Start the Server process
     app.run(use_reloader=False)
