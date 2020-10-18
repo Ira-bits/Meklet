@@ -10,10 +10,7 @@ from pathlib import Path
 app = flask.Flask(__name__)
 CORS(app)
 app.config["DEBUG"] = True  # Change to False in Production
-
-# Load docId dict in memory
-file = open("./index_files/docId.pkl", "rb")
-id_dict = pickle.load(file)
+id_dict = {}
 
 
 def get_link_title_for_docId(docId):
@@ -169,6 +166,10 @@ if __name__ == "__main__":
             print(e)
             print("Aborting! Please Try Again.")
             exit()
+
+    # Load docId dict in memory
+    file = open("./index_files/docId.pkl", "rb")
+    id_dict = pickle.load(file)
 
     # Start the Server process
     app.run(use_reloader=False)
