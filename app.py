@@ -153,10 +153,14 @@ if __name__ == "__main__":
     # Download Required Dependencies
     search_engine.download_nltk_deps()
 
-    print("Do you want to recreate the index? (y/n)")
-    recreate = False if input().lower() == "n" else True
+    # Check if index needs to be created
+    if not Path("./index_files/index.db").exists():
+        create = True
+    else:
+        print("Do you want to recreate the index? (y/n)")
+        create = False if input().lower() == "n" else True
 
-    if recreate:
+    if create:
         try:
             print("Constructing Index ...")
             search_engine.start_indexing()
