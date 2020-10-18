@@ -2,18 +2,34 @@ import flask
 from flask import request, jsonify, make_response
 from flask_cors import CORS
 import search_engine
+import pickle
+import re
+from pathlib import Path
 
 # Initialize FLask app
 app = flask.Flask(__name__)
 CORS(app)
 app.config["DEBUG"] = True  # Change to False in Production
 
+# Load docId dict in memory
+file = open("./index_files/docId.pkl", "rb")
+id_dict = pickle.load(file)
+
+
+def get_link_title_for_docId(docId):
+    "Given a docId returns the document title and Wikipedia link."
+    doc_name = id_dict[docId]
+    file = open('./corpus/' + doc_name, "r")
+    lines = file.readlines()
+    title = lines[2].strip()
+    link = "https://en.wikipedia.org/wiki/" + Path(doc_name).stem
+    return title, link
+
 
 def regular_search(query):
     processed_query = search_engine.process_string(query)
     return sorted(
-        search_engine.calculate_query_tf_idf(processed_query), key=lambda x: x[1]
-    )
+        search_engine.calculate_query_tf_idf(processed_query), key=lambda x: x[1], reverse=True)[:10]
 
 
 @app.route("/", methods=["GET"])
@@ -41,9 +57,12 @@ def api_search():
         pass  # TODO: Advanced Search
     else:
         results = regular_search(query)
-
-    # Convert the list of results to JSON format.
-    return jsonify(results)
+        results_with_data = []
+        for docId, tf_idf in results:
+            data = get_link_title_for_docId(docId)
+            results_with_data.append((docId, tf_idf, data[0], data[1]))
+            # Convert the list of results to JSON format.
+    return jsonify(results_with_data)
 
 
 if __name__ == "__main__":
