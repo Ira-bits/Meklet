@@ -135,14 +135,16 @@ def api_search():
         return response
 
     if advanced == "true":
-        pass  # TODO: Advanced Search
+        results = advanced_search(query)
     else:
         results = regular_search(query)
-        results_with_data = []
-        for docId, tf_idf in results:
-            data = get_link_title_for_docId(docId)
-            results_with_data.append((docId, tf_idf, data[0], data[1]))
-            # Convert the list of results to JSON format.
+
+    results_with_data = []
+    for docId, tf_idf in results:
+        data = get_link_title_for_docId(docId)
+        results_with_data.append((docId, tf_idf, data[0], data[1]))
+
+    # Convert the list of results to JSON format.
     return jsonify(results_with_data)
 
 
