@@ -111,7 +111,14 @@ hr {
   padding: 10px 20px;
   cursor: pointer;
 }
-
+.advanced-parameter {
+  font-size: 20px;
+  margin-top: 15px;
+}
+.advanced-label {
+  font-size: 20px;
+  margin-top: 10px;
+}
 .search-results-container {
   padding: 20px;
 }

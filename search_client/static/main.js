@@ -7,7 +7,7 @@ const get_summary = async (title) => {
     .then((res) => res.json())
     .then((res) => {
       const pageId = Object.keys(res.query.pages)[0];
-      console.log(res.query.pages[pageId].extract);
+      // console.log(res.query.pages[pageId].extract);
       let summary = res.query.pages[pageId].extract;
       summary = summary.substr(0, 400) + "...";
       document.getElementById(title).innerText = summary;
@@ -17,8 +17,15 @@ const get_summary = async (title) => {
 
 let handleSearch = (e) => {
   e.preventDefault();
+  let cb = document.getElementById("advanced");
+  let flag;
+  if (cb.checked)
+    flag = "true";
+  else
+    flag = "false";
+  console.log(flag);
   let searchParams = {
-    advanced: "false",
+    advanced: flag,
     query: document.getElementsByClassName("search-input")[0].value,
   };
   let url = new URL(serverUrl + "/api/search-results");
