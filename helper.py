@@ -90,7 +90,7 @@ def advanced_search(query):
                     pos = i
         merged_list = merge(results[pos - 1], results[pos])  # Merge smallest lists
         # Remove relevant lists and operator "and", and add merged list
-        results = results[: pos - 1] + [merged_list] + results[pos + 2 :]
+        results = results[: pos - 1] + [merged_list] + results[pos + 1 :]
         operators = operators[:pos] + operators[pos + 1 :]
         and_present = 1 if "and" in operators else 0
 
