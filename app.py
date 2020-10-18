@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     # Check if index needs to be created
     if not Path("./index_files/index.db").exists():
-        create = False
+        create = True
     else:
         print("Do you want to recreate the index? (y/n)")
         create = False if input().lower() == "n" else True
