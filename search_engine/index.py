@@ -12,8 +12,8 @@ import pickle
 import shelve
 import os
 import pathlib
-from query_processing import process_string, download_nltk_deps
-from settings import BLOCK_SIZE
+from .query_processing import process_string
+from .settings import BLOCK_SIZE
 
 
 # Helper functions for the Block Sort Based Indexing Algorithm -
@@ -195,8 +195,7 @@ def display(final_index=True):
                     break
 
 
-if __name__ == "__main__":
-    download_nltk_deps()  # To be removed form here.
+def start_indexing():
     assign_docId()
     parse_docs()
     merge_indices()

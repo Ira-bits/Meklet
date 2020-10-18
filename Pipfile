@@ -10,6 +10,7 @@ pylint = "*"
 black = "*"
 sphinx = "*"
 nltk = "*"
+flask = "*"
 
 [requires]
 python_version = "3.8"
