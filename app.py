@@ -1,44 +1,41 @@
-import flask
-from flask import request, jsonify, make_response
+""" Flask app for Meklet Search Engine Web Client """
+
+from flask import Flask, request, jsonify, make_response, render_template
 from flask_cors import CORS
 import search_engine
 import pickle
-import re
 from pathlib import Path
+from helper import regular_search, advanced_search, get_link_title_for_docId
 
-# Initialize FLask app
-app = flask.Flask(__name__)
+# Initialize Flask app
+app = Flask(
+    __name__,
+    static_url_path="",
+    static_folder="search_client/static",
+    template_folder="search_client/templates",
+)
 CORS(app)
 app.config["DEBUG"] = True  # Change to False in Production
-
-# Load docId dict in memory
-file = open("./index_files/docId.pkl", "rb")
-id_dict = pickle.load(file)
-
-
-def get_link_title_for_docId(docId):
-    "Given a docId returns the document title and Wikipedia link."
-    doc_name = id_dict[docId]
-    file = open('./corpus/' + doc_name, "r")
-    lines = file.readlines()
-    title = lines[2].strip()
-    link = "https://en.wikipedia.org/wiki/" + Path(doc_name).stem
-    return title, link
-
-
-def regular_search(query):
-    processed_query = search_engine.process_string(query)
-    return sorted(
-        search_engine.calculate_query_tf_idf(processed_query), key=lambda x: x[1], reverse=True)[:10]
+id_dict = {}
 
 
 @app.route("/", methods=["GET"])
 def home():
-    return "Serve Home Page from this URL!"
+    """ Route to serve home page of the Web App """
+    print("here")
+    return render_template("index.html")
 
 
 @app.route("/api/search-results", methods=["GET"])
 def api_search():
+    """
+    API Route for querying the backend.
+
+        * Params - 1. advanced = {"true","false"}
+                   2.  query="<query_string>"
+        * Return Format - [(docID, tf-idf score, title, summary)]
+    """
+
     params = request.args
     advanced = params["advanced"]
     query = params["query"]
@@ -54,14 +51,16 @@ def api_search():
         return response
 
     if advanced == "true":
-        pass  # TODO: Advanced Search
+        results = advanced_search(query)
     else:
         results = regular_search(query)
-        results_with_data = []
-        for docId, tf_idf in results:
-            data = get_link_title_for_docId(docId)
-            results_with_data.append((docId, tf_idf, data[0], data[1]))
-            # Convert the list of results to JSON format.
+
+    results_with_data = []
+    for docId, tf_idf in results:
+        data = get_link_title_for_docId(docId, id_dict)
+        results_with_data.append((docId, tf_idf, data[0], data[1]))
+
+    # Convert the list of results to JSON format.
     return jsonify(results_with_data)
 
 
@@ -70,10 +69,14 @@ if __name__ == "__main__":
     # Download Required Dependencies
     search_engine.download_nltk_deps()
 
-    print("Do you want to recreate the index? (y/n)")
-    recreate = False if input().lower() == "n" else True
+    # Check if index needs to be created
+    if not Path("./index_files/index.db").exists():
+        create = True
+    else:
+        print("Do you want to recreate the index? (y/n)")
+        create = False if input().lower() == "n" else True
 
-    if recreate:
+    if create:
         try:
             print("Constructing Index ...")
             search_engine.start_indexing()
@@ -82,6 +85,10 @@ if __name__ == "__main__":
             print(e)
             print("Aborting! Please Try Again.")
             exit()
+
+    # Load docId dict in memory
+    file = open("./index_files/docId.pkl", "rb")
+    id_dict = pickle.load(file)
 
     # Start the Server process
     app.run(use_reloader=False)

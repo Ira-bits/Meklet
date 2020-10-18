@@ -82,9 +82,7 @@ def process_boolean_query(query):
     for item in pieces:
         disposable = item.strip()
         if in_query:
-            disposable = tokenize(disposable)
-            disposable = remove_stopwords(disposable)
-            disposable = stem(disposable)
+            disposable = process_string(disposable)
             queries.append(disposable)
         else:
             operators.append(disposable)

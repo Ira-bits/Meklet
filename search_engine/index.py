@@ -143,7 +143,13 @@ def merge_indices():
         obj_list.append((obj, ptr))
 
     # Until all intermediate indices are parsed , find smallest and write to unified index.
+    slash_value = 0
     while obj_list:
+        if slash_value:
+            print("Merging /", end="\r")
+        else:
+            print("Merging \\", end="\r")
+        slash_value = not slash_value
         req_obj, obj_list = find_smallest(obj_list)
         curr_list.append(req_obj)
         if len(curr_list) > BLOCK_SIZE:
@@ -162,7 +168,7 @@ def construct_index():
     a dictionary containing docId,freq as the key-value pairs.
     """
 
-    print("Constructing Index")
+    print("Starting to Index")
     index_obj = shelve.open("./index_files/index.db")
     with open("./index_files/temp_index.pkl", "rb") as temp_index:
         # Dict of docId,freq as key-value pairs for the current term.
