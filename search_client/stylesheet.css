@@ -1,0 +1,124 @@
+html,
+body {
+    padding: 0;
+    margin: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+a {
+    text-decoration: none;
+}
+
+.logo-search-container {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    margin: 10px;
+    gap: 10px;
+}
+
+.logo-search-container.init {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 90%;
+    margin-left: -45%;
+    margin-top: -150px;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+}
+
+.logo {
+    text-align: center;
+    font-size: 35px;
+    color: #41337a;
+}
+.logo.init {
+    /* text-align: center; */
+    font-size: 72px;
+    /* color: #41337a; */
+}
+.search-container {
+    display: flex;
+    width: 100%;
+    border: 1px solid black;
+}
+
+.search-input-container {
+    height: 100%;
+    font-size: 20px;
+    flex: 1;
+    width: 100%;
+}
+
+.search-input {
+    border: 0;
+    height: 100%;
+    width: 100%;
+    font-size: 20px;
+    padding: 10px 20px;
+}
+
+.search-button {
+    border: 0;
+    flex: 1;
+    max-width: 100px;
+    background-color: #41337a;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+    align-items: center;
+    font-size: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.search-results-container {
+    padding: 20px;
+}
+
+.result-item {
+    width: 100%;
+}
+
+.result-item a {
+    color: #000000;
+}
+
+@media only screen and (min-width: 540px) {
+    .logo-search-container {
+        width: 80%;
+        flex-direction: row;
+    }
+
+    .logo-search-container.init {
+        width: 80%;
+        margin-left: -40%;
+        flex-direction: column;
+    }
+    .result-item {
+        width: 90%;
+    }
+}
+
+@media only screen and (min-width: 1280px) {
+    .logo-search-container {
+        width: 1080px;
+    }
+
+    .logo-search-container.init {
+        width: 1080px;
+        flex-direction: column;
+        margin-left: -540px;
+    }
+    .result-item {
+        width: 1080px;
+    }
+}

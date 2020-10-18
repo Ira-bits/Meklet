@@ -1,9 +1,11 @@
 import flask
 from flask import request, jsonify, make_response
+from flask_cors import CORS
 import search_engine
 
 # Initialize FLask app
 app = flask.Flask(__name__)
+CORS(app)
 app.config["DEBUG"] = True  # Change to False in Production
 
 
