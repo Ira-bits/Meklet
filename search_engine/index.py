@@ -66,10 +66,17 @@ def assign_docId():
     print("Assigning Doc ID")
     id_dict = {}
     curr_id = 1
-    for filename in os.listdir("corpus"):
+    file_list = os.listdir("corpus")
+    if not file_list:
+        raise Exception("Error- Corpus is Empty! Add some documents.")
+    for filename in file_list:
         print(curr_id, end="\r")
         id_dict[curr_id] = filename
         curr_id += 1
+    try:
+        os.mkdir("./index_files")
+    except OSError:
+        pass  # Folder Already Exists
     with open("./index_files/docId.pkl", "wb") as f:
         pickle.dump(id_dict, f, pickle.HIGHEST_PROTOCOL)
     print("Done assigning Doc ID")
@@ -93,12 +100,9 @@ def parse_docs():
         curr_list = []
         id_dict_len = len(id_dict)
         for docId, name in id_dict.items():
-
-            print("Processing {docId} of {total}".format(
-                docId=docId, total=id_dict_len), end="\r")
+            print(f"Processing {docId} of {id_dict_len}", end="\r")
             # Get document text as String.
-            doc_text = pathlib.Path(
-                "./corpus/" + name).read_text().replace("\n", " ")
+            doc_text = pathlib.Path("./corpus/" + name).read_text().replace("\n", " ")
 
             # Get list of terms in document after normalization.
             doc_terms = process_string(doc_text)
@@ -125,7 +129,7 @@ def parse_docs():
 def merge_indices():
     """ Merges the intermediate indices using k-way merge to get an unified inverted index. """
 
-    print("Merging indeices")
+    print("Merging indices")
     file_list = os.listdir("index_files")
     temp_index_obj = open_file(filename="./index_files/temp_index.pkl")
     ptrs = []  # List of file pointers for all intermediate indices.
@@ -148,7 +152,7 @@ def merge_indices():
     if curr_list:
         write_to_file(temp_index_obj, curr_list)
     temp_index_obj.close()
-    print("Done Merging indeices")
+    print("Done Merging indices")
 
 
 def construct_index():
@@ -166,10 +170,15 @@ def construct_index():
         prev_term = ""
         prev_docId = -1
         freq = 0  # Frequency value for a term in a particular document.
+        slash_value = 0
         while True:
             try:
                 term, docId = pickle.load(temp_index)
-                print("Indexing {docId}".format(docId=docId), end="\r")
+                if slash_value:
+                    print("Indexing /", end="\r")
+                else:
+                    print("Indexing \\", end="\r")
+                slash_value = not slash_value
                 if term == prev_term:
                     if docId == prev_docId:
                         freq += 1
@@ -191,7 +200,17 @@ def construct_index():
                 index_obj[prev_term] = term_dict
                 index_obj.close()
                 break
-    print("Done Constructing Index")
+
+    # Delete temporary files
+    print("Deleting Temporary Files")
+    no_files = len(os.listdir("./index_files")) - 2
+    count = 1
+    for file_name in os.listdir("./index_files"):
+        if file_name[:10] == "temp_index":
+            print(f"Deleting file {count} of {no_files}", end="\r")
+            os.remove("./index_files/" + file_name)
+            count += 1
+    print("Done Deleting Temporary files")
 
 
 # Temporary function to print pickle files. To be removed later.
