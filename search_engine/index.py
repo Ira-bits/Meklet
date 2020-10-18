@@ -11,6 +11,7 @@
 import pickle
 import shelve
 import os
+import sys
 import pathlib
 from .query_processing import process_string
 from .settings import BLOCK_SIZE
@@ -62,13 +63,16 @@ def find_smallest(obj_list):
 
 def assign_docId():
     """Assigns an id number to each document in the corpus"""
+    print("Assigning Doc ID")
     id_dict = {}
     curr_id = 1
     for filename in os.listdir("corpus"):
+        print(curr_id, end="\r")
         id_dict[curr_id] = filename
         curr_id += 1
     with open("./index_files/docId.pkl", "wb") as f:
         pickle.dump(id_dict, f, pickle.HIGHEST_PROTOCOL)
+    print("Done assigning Doc ID")
 
 
 def parse_docs():
@@ -79,17 +83,22 @@ def parse_docs():
         * temp_index<no>.pkl store the intermediate indices
 
     """
-
+    print("Parsing Docs")
     # Load the id dictionary.
     id_dict = {}
     with open("./index_files/docId.pkl", "rb") as f:
         id_dict = pickle.load(f)
         curr_file_no = 1
-        curr_list = []  # Stores (termId,docId) pairs for current intermediate index.
-
+        # Stores (termId,docId) pairs for current intermediate index.
+        curr_list = []
+        id_dict_len = len(id_dict)
         for docId, name in id_dict.items():
+
+            print("Processing {docId} of {total}".format(
+                docId=docId, total=id_dict_len), end="\r")
             # Get document text as String.
-            doc_text = pathlib.Path("./corpus/" + name).read_text().replace("\n", " ")
+            doc_text = pathlib.Path(
+                "./corpus/" + name).read_text().replace("\n", " ")
 
             # Get list of terms in document after normalization.
             doc_terms = process_string(doc_text)
@@ -110,11 +119,13 @@ def parse_docs():
             index_obj = open_file(curr_file_no=curr_file_no)
             write_to_file(index_obj, curr_list)
             index_obj.close()
+    print("Done parsing Docs")
 
 
 def merge_indices():
     """ Merges the intermediate indices using k-way merge to get an unified inverted index. """
 
+    print("Merging indeices")
     file_list = os.listdir("index_files")
     temp_index_obj = open_file(filename="./index_files/temp_index.pkl")
     ptrs = []  # List of file pointers for all intermediate indices.
@@ -137,6 +148,7 @@ def merge_indices():
     if curr_list:
         write_to_file(temp_index_obj, curr_list)
     temp_index_obj.close()
+    print("Done Merging indeices")
 
 
 def construct_index():
@@ -146,15 +158,18 @@ def construct_index():
     a dictionary containing docId,freq as the key-value pairs.
     """
 
+    print("Constructing Index")
     index_obj = shelve.open("./index_files/index.db")
     with open("./index_files/temp_index.pkl", "rb") as temp_index:
-        term_dict = {}  # Dict of docId,freq as key-value pairs for the current term.
+        # Dict of docId,freq as key-value pairs for the current term.
+        term_dict = {}
         prev_term = ""
         prev_docId = -1
         freq = 0  # Frequency value for a term in a particular document.
         while True:
             try:
                 term, docId = pickle.load(temp_index)
+                print("Indexing {docId}".format(docId=docId), end="\r")
                 if term == prev_term:
                     if docId == prev_docId:
                         freq += 1
@@ -176,6 +191,7 @@ def construct_index():
                 index_obj[prev_term] = term_dict
                 index_obj.close()
                 break
+    print("Done Constructing Index")
 
 
 # Temporary function to print pickle files. To be removed later.
