@@ -65,6 +65,7 @@ a {
 }
 
 .search-button {
+    border: 0;
     flex: 1;
     max-width: 100px;
     background-color: #41337a;
@@ -79,6 +80,18 @@ a {
     cursor: pointer;
 }
 
+.search-results-container {
+    padding: 20px;
+}
+
+.result-item {
+    width: 100%;
+}
+
+.result-item a {
+    color: #000000;
+}
+
 @media only screen and (min-width: 540px) {
     .logo-search-container {
         width: 80%;
@@ -89,6 +102,9 @@ a {
         width: 80%;
         margin-left: -40%;
         flex-direction: column;
+    }
+    .result-item {
+        width: 90%;
     }
 }
 
@@ -101,5 +117,8 @@ a {
         width: 1080px;
         flex-direction: column;
         margin-left: -540px;
+    }
+    .result-item {
+        width: 1080px;
     }
 }
