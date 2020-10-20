@@ -4,8 +4,12 @@ from flask import Flask, request, jsonify, make_response, render_template
 from flask_cors import CORS
 import search_engine
 import pickle
+import time
 from pathlib import Path
-from helper import regular_search, advanced_search, get_link_title_for_docId
+from helper import regular_search, advanced_search, get_link_title_for_docId, LRUCache
+
+cache=LRUCache(5)
+adv_cache=LRUCache(5)
 
 # Initialize Flask app
 app = Flask(
@@ -49,17 +53,34 @@ def api_search():
     except AssertionError:
         response = make_response("Invalid Request Parameters", 400)
         return response
-
-    if advanced == "true":
-        results = advanced_search(query)
+    start=time.time()
+    flag=True
+    if(flag):
+        if advanced == "true":
+            cache_search=adv_cache.get(query)
+            if(cache_search!=-1):
+                results=cache_search
+            else:
+                results = advanced_search(query)
+                adv_cache.put(query,results)
+        else:
+            cache_search=cache.get(query)
+            if(cache_search!=-1):
+                results=cache_search
+            else:
+                results = regular_search(query)
+                cache.put(query,results)
     else:
-        results = regular_search(query)
-
+        if advanced == "true":
+            results = advanced_search(query)
+        else:
+            results = regular_search(query)
     results_with_data = []
     for docId, tf_idf in results:
         data = get_link_title_for_docId(docId, id_dict)
         results_with_data.append((docId, tf_idf, data[0], data[1]))
-
+    end=time.time()
+    print(end-start)
     # Convert the list of results to JSON format.
     return jsonify(results_with_data)
 
