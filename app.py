@@ -8,8 +8,8 @@ import time
 from pathlib import Path
 from helper import regular_search, advanced_search, get_link_title_for_docId, LRUCache
 
-cache=LRUCache(5)
-adv_cache=LRUCache(5)
+cache=LRUCache(100)
+adv_cache=LRUCache(100)
 
 # Initialize Flask app
 app = Flask(
