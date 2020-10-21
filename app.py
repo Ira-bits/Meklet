@@ -6,10 +6,14 @@ import search_engine
 import pickle
 import time
 from pathlib import Path
-from helper import regular_search, advanced_search, get_link_title_for_docId, LRUCache
+from helper import (
+    regular_search,
+    advanced_search,
+    get_link_title_for_docId,
+    LRUCache,
+    reconstruct,
+)
 
-cache=LRUCache(100)
-adv_cache=LRUCache(100)
 
 # Initialize Flask app
 app = Flask(
@@ -22,11 +26,14 @@ CORS(app)
 app.config["DEBUG"] = True  # Change to False in Production
 id_dict = {}
 
+# Initialize Cache
+cache = LRUCache(100)
+adv_cache = LRUCache(100)
+
 
 @app.route("/", methods=["GET"])
 def home():
     """ Route to serve home page of the Web App """
-    print("here")
     return render_template("index.html")
 
 
@@ -38,6 +45,8 @@ def api_search():
         * Params - 1. advanced = {"true","false"}
                    2.  query="<query_string>"
         * Return Format - [(docID, tf-idf score, title, summary)]
+
+    Processes the query -> Looks in cache -> If results not found, Looks in Index -> Returns results
     """
 
     params = request.args
@@ -53,34 +62,31 @@ def api_search():
     except AssertionError:
         response = make_response("Invalid Request Parameters", 400)
         return response
-    start=time.time()
-    flag=True
-    if(flag):
-        if advanced == "true":
-            cache_search=adv_cache.get(query)
-            if(cache_search!=-1):
-                results=cache_search
-            else:
-                results = advanced_search(query)
-                adv_cache.put(query,results)
+
+    if advanced == "true":
+        separated_query, operators = search_engine.process_boolean_query(query)
+        cache_query = reconstruct(separated_query, operators)
+        cache_search = adv_cache.get(cache_query)
+        if cache_search != -1:
+            results = cache_search
         else:
-            cache_search=cache.get(query)
-            if(cache_search!=-1):
-                results=cache_search
-            else:
-                results = regular_search(query)
-                cache.put(query,results)
+            results = advanced_search(separated_query, operators)
+            adv_cache.put(cache_query, results)
     else:
-        if advanced == "true":
-            results = advanced_search(query)
+        processed_query = search_engine.process_string(query)
+        cache_query = reconstruct(processed_query)
+        cache_search = cache.get(cache_query)
+        if cache_search != -1:
+            results = cache_search
         else:
-            results = regular_search(query)
+            results = regular_search(processed_query)
+            cache.put(cache_query, results)
+
     results_with_data = []
     for docId, tf_idf in results:
         data = get_link_title_for_docId(docId, id_dict)
         results_with_data.append((docId, tf_idf, data[0], data[1]))
-    end=time.time()
-    print(end-start)
+
     # Convert the list of results to JSON format.
     return jsonify(results_with_data)
 
