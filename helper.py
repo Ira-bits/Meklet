@@ -1,4 +1,4 @@
-""" Contains helper functions for searching results in index """
+""" Contains helper classes/functions for searching results in index """
 
 import search_engine
 import pickle
@@ -6,35 +6,56 @@ import sys
 from pathlib import Path
 from collections import OrderedDict
 
+
 class LRUCache:
- 
-    # initialising capacity
+    """ Class to implement LRU Cache """
+
     def __init__(self, capacity: int):
+        """ Initializes an Ordered Dictionary and cache capacity """
         self.cache = OrderedDict()
         self.capacity = capacity
- 
-    # we return the value of the key
-    # that is queried in O(1) and return -1 if we
-    # don't find the key in out dict / cache.
-    # And also move the key to the end
-    # to show that it was recently used.
+
     def get(self, key: int) -> int:
+        """
+        Returns the value of the key that is queried in O(1) and return -1 if the key
+        is not found in dict / cache. Moves the key to the end to mark that it
+        was recently used.
+        """
         if key not in self.cache:
             return -1
         else:
             self.cache.move_to_end(key)
             return self.cache[key]
- 
-    # first, we add / update the key by conventional methods.
-    # And also move the key to the end to show that it was recently used.
-    # But here we will also check whether the length of our
-    # ordered dictionary has exceeded our capacity,
-    # If so we remove the first key (least recently used)
+
     def put(self, key: int, value: int) -> None:
+        """
+        Adds/Updates the key by conventional methods. Moves the key to the end to mark
+        that it was recently used. Checks whether the length of our ordered dictionary
+        has exceeded the cache capacity, If so then removes the first key (least recently used)
+        """
         self.cache[key] = value
         self.cache.move_to_end(key)
         if len(self.cache) > self.capacity:
-            self.cache.popitem(last = False)
+            self.cache.popitem(last=False)
+
+
+def reconstruct(query, operators=None):
+    """ Reconstructs the processed query to be stored in cache """
+    recons_query = ""
+    if not operators:
+        for piece in query:
+            recons_query += piece + " "
+    else:
+        for itr in range(len(operators)):
+            temp_query = ""
+            for piece in query[itr]:
+                temp_query += piece + " "
+            temp_query = temp_query.strip()
+            if operators[itr] != "":
+                recons_query += operators[itr] + " " + temp_query + " "
+            else:
+                recons_query += temp_query + " "
+    return recons_query.strip()
 
 
 def get_link_title_for_docId(docId, id_dict):
@@ -47,9 +68,8 @@ def get_link_title_for_docId(docId, id_dict):
     return title, link
 
 
-def regular_search(query):
+def regular_search(processed_query):
     """ Takes in a query and returns a list of corresponding (docId,freq) pairs """
-    processed_query = search_engine.process_string(query)
     res = sorted(
         search_engine.calculate_query_tf_idf(processed_query),
         key=lambda x: x[1],
@@ -91,12 +111,11 @@ def merge(list_a, list_b, operator="and"):
     return list_c
 
 
-def advanced_search(query):
+def advanced_search(separated_query, operators):
     """
     Takes in a boolean query and returns results evaluated using
     Optimal Merge Pattern Algorithm
     """
-    separated_query, operators = search_engine.process_boolean_query(query)
     results = []
     for query in separated_query:
         results.append(
@@ -132,5 +151,5 @@ def advanced_search(query):
         result.sort(key=lambda x: x[0])
         final_result = merge(final_result, result, operator="or")
 
-    res= sorted(final_result, key=lambda x: x[1], reverse=True)[:10]
+    res = sorted(final_result, key=lambda x: x[1], reverse=True)[:10]
     return res
