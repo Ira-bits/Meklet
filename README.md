@@ -1,8 +1,11 @@
 # Meklet
-A Web based Domain Specific Search Engine for CS F469 - Information Retrieval Course Project 
-![Screenshot_20201024_211251](https://user-images.githubusercontent.com/46719471/97086241-ab711e00-163f-11eb-9705-87410aab87f6.png)
-![Screenshot_20201024_213433](https://user-images.githubusercontent.com/46719471/97086448-ed4e9400-1640-11eb-86e2-1cf63cb211de.png)
-![Screenshot_20201024_213713](https://user-images.githubusercontent.com/46719471/97086478-1bcc6f00-1641-11eb-9f54-e60cc559ed87.png)
+A Web based Domain Specific Search Engine for CS F469 - Information Retrieval Course Project
+<br></br>
+<kbd><img src="https://user-images.githubusercontent.com/46719471/97086241-ab711e00-163f-11eb-9705-87410aab87f6.png"></kbd>
+<br></br>
+<kbd><img src="https://user-images.githubusercontent.com/46719471/97086448-ed4e9400-1640-11eb-86e2-1cf63cb211de.png"></kbd>
+<br></br>
+<kbd><img src="https://user-images.githubusercontent.com/46719471/97086478-1bcc6f00-1641-11eb-9f54-e60cc559ed87.png"></kbd>
 
 ## Guides
 
