@@ -1,5 +1,5 @@
 # Meklet
-A Web based Domain Specific Search Engine for CS F469 - Information Retrieval Course Project
+A Web based Domain Specific Search Engine in Python
 <br></br>
 <kbd><img src="https://user-images.githubusercontent.com/46719471/97086241-ab711e00-163f-11eb-9705-87410aab87f6.png"></kbd>
 <br></br>
